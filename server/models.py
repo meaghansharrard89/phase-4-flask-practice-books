@@ -31,6 +31,9 @@ class Author(db.Model, SerializerMixin):
 
     serialize_rules = ("-books.author",)
 
+    def __repr__(self):
+        return f"<Author {self.id}: {self.name}>"
+
 
 class Publisher(db.Model, SerializerMixin):
     __tablename__ = "publishers"
@@ -50,7 +53,7 @@ class Publisher(db.Model, SerializerMixin):
 
     serialize_rules = ("-books.publisher",)
 
-    # Add validations
+    # Add validation
 
     @validates("founding_year")
     def validate_founding_year(self, key, value):
@@ -58,6 +61,9 @@ class Publisher(db.Model, SerializerMixin):
             return value
         else:
             raise ValueError("Founding year must be between 1600 and 2023")
+
+    def __repr__(self):
+        return f"<Publisher {self.id}: {self.name}>"
 
 
 class Book(db.Model, SerializerMixin):
@@ -67,7 +73,7 @@ class Book(db.Model, SerializerMixin):
     title = db.Column(db.String, nullable=False, unique=True)
     page_count = db.Column(db.Integer, nullable=False)
 
-    # Foreign keys
+    # Add foreign keys
 
     author_id = db.Column(db.Integer, db.ForeignKey("authors.id"))
     publisher_id = db.Column(db.Integer, db.ForeignKey("publishers.id"))
@@ -77,18 +83,33 @@ class Book(db.Model, SerializerMixin):
     author = db.relationship("Author", back_populates="books")
     publisher = db.relationship("Publisher", back_populates="books")
 
+    # Methods to get author/publisher name
+
+    def author_name(self):
+        return self.author.name
+
+    def publisher_name(self):
+        return self.publisher.name
+
     # Add serialization rules
 
     serialize_rules = (
-        "-author.books",
-        "-publisher.books",
+        "-author",
+        "-publisher",
+        "-publisher_id",
+        "-author_id",
+        "author_name",
+        "publisher_name",
     )
 
-    # Add validations
+    # Add validation
 
     @validates("page_count")
-    def validate_pages(self, key, value):
+    def validate_page_count(self, key, value):
         if value > 0:
             return value
         else:
             raise ValueError("Page count must be greater than 0")
+
+    def __repr__(self):
+        return f"<Book {self.id}>"
